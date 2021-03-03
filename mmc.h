@@ -34,7 +34,15 @@
 #define MMC_SET_WRITE_PROT	28    /* ac   [31:0] data addr   R1b */
 #define MMC_CLEAR_WRITE_PROT	29    /* ac   [31:0] data addr   R1b */
 #define MMC_SEND_WRITE_PROT_TYPE 31   /* ac   [31:0] data addr   R1  */
-
+#define MMC_ERASE_GROUP_START   35    /* ac   [31:0] data addr   R1  */
+#define MMC_ERASE_GROUP_END     36    /* ac   [31:0] data addr   R1  */
+#define MMC_ERASE               38    /* ac   [31] Secure request
+                                               [30:16] set to 0
+                                               [15] Force Garbage Collect request4
+                                               [14:2] set to 0
+                                               [1] Discard Enable
+                                               [0] Identify Write Blocks for Erase (or TRIM Enable)
+					R1b */
 /*
  * EXT_CSD fields
  */

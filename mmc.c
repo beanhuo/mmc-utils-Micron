@@ -215,6 +215,11 @@ static struct Command commands[] = {
 		"Run Field Firmware Update with <image name> on <device>.\n",
 	  NULL
 	},
+	{ do_erase, -4,
+	"erase", "<arg> " "<start address> " "<end address> " "<device>\n"
+	"Send Erase command to the <device>.\nThis will delete all user data in the specified region of the device.",
+	NULL
+	},
 	{ 0, 0, 0, 0 }
 };
 

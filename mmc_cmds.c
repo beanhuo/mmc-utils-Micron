@@ -2434,6 +2434,143 @@ int do_cache_dis(int nargs, char **argv)
 {
 	return do_cache_ctrl(0, nargs, argv);
 }
+int erase(int fd, __u32 argin, __u32 start, __u32 end)
+{
+        int ret = 0;
+    struct mmc_ioc_cmd idata;
+    __u32  response;
+
+    // Set Start address
+    memset(&idata, 0, sizeof(idata));
+    idata.opcode = MMC_ERASE_GROUP_START;
+    idata.arg = start;
+    idata.flags = MMC_RSP_R1 | MMC_CMD_AC;
+    ret = ioctl(fd, MMC_IOC_CMD, &idata);
+    if (ret)  {
+      perror("ioctl");
+      printf("Erase Group Start Address command failed\n");
+      return ret;
+    }
+    ret = send_status(fd, &response);
+    if (response & 0xFFF900C0) {
+      printf("CMD13 returns: 0x%08x during CMD35\n", response);
+    }
+
+    // Set end address
+    memset(&idata, 0, sizeof(idata));
+    idata.opcode = MMC_ERASE_GROUP_END;
+    idata.arg = end;
+    idata.flags = MMC_RSP_R1 | MMC_CMD_AC;
+    ret = ioctl(fd, MMC_IOC_CMD, &idata);
+    if (ret) {
+      perror("ioctl");
+      printf("Erase Group End Address command failed\n");
+      return ret;
+    }
+    ret = send_status(fd, &response);
+    if (response & 0xFFF900C0)
+      printf("CMD13 returns: 0x%08x during CMD36\n", response);
+
+    // Send Erase Command
+    memset(&idata, 0, sizeof(idata));
+    idata.opcode = MMC_ERASE;
+    idata.arg = argin;
+    idata.cmd_timeout_ms = 60000;
+    idata.data_timeout_ns = 60000000;
+    idata.flags = MMC_RSP_R1B | MMC_CMD_AC;
+    ret = ioctl(fd, MMC_IOC_CMD, &idata);
+    if (ret)  {
+      perror("ioctl");
+      printf("Erase command failed\n");
+      return ret;
+    }
+
+    // Send Status Command
+    // 1098 7654 3210 9876 5432 1098 7654 3210
+    // 3322 2222 2222 1111 1111 1100 0000 0000
+    // 1111 1111 1111 1xx1 xxxx xxxx 11xx xxxx  Device Status Error bits
+    // F    F    F    9    0    0    C    0     0xFFF900C0
+    ret = send_status(fd, &response);
+    if (response & 0xFFF900C0)
+      printf("CMD13 returns: 0x%08x during CMD38\n", response);
+    if (ret)
+      printf("Send Status Command returned 0x%08X\n", response);
+
+    return ret;
+}
+
+int do_erase(int nargs, char **argv)
+{
+    int fd, ret;
+    char *device;
+    char **eptr=NULL;
+    __u32  argin, start, end;
+
+
+    if (nargs != 5) {
+        fprintf(stderr, "Usage: mmc erase <arg> <start address> <end address> </path/to/mmcblkX>\n");
+        exit(1);
+    }
+
+    if ((argv[1][0] == '0') && (argv[1][1] == 'x'))
+      argin = strtol(argv[1], eptr, 16);
+    else
+      argin = strtol(argv[1], eptr, 10);
+    if ((argv[2][0] == '0') && (argv[2][1] == 'x'))
+      start = strtol(argv[2], eptr, 16);
+    else
+      start = strtol(argv[2], eptr, 10);
+    if ((argv[3][0] == '0') && (argv[3][1] == 'x'))
+      end   = strtol(argv[3], eptr, 16);
+    else
+      end   = strtol(argv[3], eptr, 10);
+    device = argv[4];
+
+    fd = open(device, O_RDWR);
+    if (fd < 0) {
+        perror("open");
+        exit(1);
+    }
+
+    printf("Executing (0x%08X): ", argin);
+    switch(argin)  {
+    case 0x00000000:
+      printf("Erase ");
+      break;
+    case 0x00000003:
+      printf("Discard ");
+      break;
+    case 0x80000000:
+      printf("Secure Erase ");
+      break;
+    case 0x80008000:
+      printf("Secure Trim Step 2 ");
+      break;
+    case 0x80000001:
+      printf("Secure Trim Step 1 ");
+      break;
+    case 0x00000001:
+      printf("Trim ");
+      break;
+    default:
+      printf("Unknown Argument ");
+    }
+    printf("From:0x%08X To:0x%08X\n", start, end);
+
+    ret = erase(fd, argin, start, end);
+    if (ret) {
+        fprintf(stderr, "Error in Erase Command to %s with Arg=0x%08X Start=0x%08X End=0x%08X\n",
+            device,
+            argin,
+            start,
+            end);
+        exit(1);
+    }
+
+    return ret;
+
+}
+
 
 int do_ffu(int nargs, char **argv)
 {
