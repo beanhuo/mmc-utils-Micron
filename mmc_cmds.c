@@ -2802,7 +2802,7 @@ do_retry:
 	if (chunk_size)
 	while (blocks > 0) {
 
-	write_blk_cnt = (blocks > 1 ? 1: blocks);
+	write_blk_cnt = (blocks > 8 ? 8: blocks);
 
 	multi_cmd1->cmds[0].opcode = MMC_WRITE_MULTIPLE_BLOCK;
 	multi_cmd1->cmds[0].blksz = sect_size;
@@ -3046,7 +3046,7 @@ do_retry:
 	if (chunk_size)
 	while (blocks > 0) {
 
-	write_blk_cnt = (blocks > 32 ? 32: blocks);
+	write_blk_cnt = (blocks > 8 ? 8: blocks);
 
 	/* send block count */
 	multi_cmd1->cmds[0].opcode = MMC_SET_BLOCK_COUNT;
