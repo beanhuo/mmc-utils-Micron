@@ -2454,7 +2454,7 @@ int do_ffu(int nargs, char **argv)
 	struct mmc_ioc_multi_cmd *multi_cmd = NULL;
 	__u32 blocks = 1;
 
-	fprintf(stderr, "Use CMD24+CMD25 with single command to do FFU \n");
+	fprintf(stderr, "Use CMD23+CMD25 with single command to do FFU \n");
 	if (nargs != 3) {
 		fprintf(stderr, "Usage: ffu1 <image name> </path/to/mmcblkX> \n");
 		exit(1);
@@ -2799,10 +2799,17 @@ do_retry:
 
 	int write_offset = 0;
 	int write_blk_cnt = 0;
+	int min_blks;
+
+	if (sect_size == 512)
+		min_blks = 8;
+	else
+		min_blks = 1;
+
 	if (chunk_size)
 	while (blocks > 0) {
 
-	write_blk_cnt = (blocks > 8 ? 8: blocks);
+	write_blk_cnt = (blocks > min_blks ? min_blks : blocks);
 
 	multi_cmd1->cmds[0].opcode = MMC_WRITE_MULTIPLE_BLOCK;
 	multi_cmd1->cmds[0].blksz = sect_size;
@@ -2861,6 +2868,8 @@ do_retry:
 	}
 	else {
 		fprintf(stderr, "FW size and number of sectors written mismatch. Status return %d\n", ret);
+		fprintf(stderr, "FW size %jd bytes, programmed %jd bytes\n",
+			(intmax_t)fw_size, (intmax_t)(sect_done * sect_size));
 		goto out;
 	}
 
@@ -3181,7 +3190,7 @@ int do_ffu4(int nargs, char **argv)
         char *device;
         struct mmc_ioc_multi_cmd *multi_cmd;
 
-        fprintf(stderr, "Use CMD24 do ffu with multiple  commands\n");
+        fprintf(stderr, "Use CMD6+CMD24+CMD24...+CMD6 do ffu with multiple commands\n");
         if (nargs != 3) {
                 fprintf(stderr, "Usage: ffu4 <image name> </path/to/mmcblkX> \n");
                 exit(1);
@@ -3338,6 +3347,7 @@ do_retry:
         }
         else {
                 fprintf(stderr, "FW size and number of sectors written mismatch. Status return %d\n", ret);
+                fprintf(stderr, "Programmed: %d, FW size :%jd bytes\r", sect_done * sect_size, (intmax_t)fw_size);
                 goto out;
         }
 
