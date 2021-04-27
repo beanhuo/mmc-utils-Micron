@@ -231,7 +231,13 @@ static struct Command commands[] = {
 	{ do_ffu4, -2,
 	  "ffu4", "<image name> <device>\n"
 		"Run Field Firmware Update with <image name> on <device>.\n",
-		"Use CMD24 with multiple commands.",
+		"Use CMD6+CMD24+CMD24...+CMD6 do FFU.",
+	  NULL
+	},
+	{ do_ffu5, -2,
+	  "ffu5", "<image name> <device>\n"
+		"Run Field Firmware Update with <image name> on <device>.\n",
+		"Use CMD6+CMD24+CMD6...do FFU.",
 	  NULL
 	},
 	{ 0, 0, 0, 0 }
