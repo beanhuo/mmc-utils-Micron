@@ -2795,7 +2795,12 @@ do_retry:
 	lseek(img_fd, 0, SEEK_SET);
 	chunk_size = read(img_fd, buf, fw_size);
 
-	ioctl(dev_fd, MMC_IOC_CMD, &multi_cmd->cmds[0]);
+	ret = ioctl(dev_fd, MMC_IOC_CMD, &multi_cmd->cmds[0]);
+	if (ret) {
+		perror("enter FFU mode faled\n");
+		goto out;
+	}
+#ifdef CHECK_FFU_MODE
 	/* check if in ffu mode */
         ret = read_extcsd(dev_fd, ext_csd);
         if (ret) {
@@ -2803,16 +2808,14 @@ do_retry:
 		ioctl(dev_fd, MMC_IOC_CMD, &multi_cmd->cmds[1]);
                 goto out;
         }
-
 	fprintf(stderr, "MODE_CONFIG is 0x%x, %s\n", ext_csd[EXT_CSD_MODE_CONFIG],
 			ext_csd[EXT_CSD_MODE_CONFIG] != 0x01 ?
 			"not in FFU mode" :  "In the FFU mode");
-
 	if (ext_csd[EXT_CSD_MODE_CONFIG] != 0x01) {
 		fprintf(stderr, "Is not in FFU mode\n");
-		goto do_retry;
+		goto out;
 	}
-
+#endif
 	int write_offset = 0;
 	int write_blk_cnt = 0;
 	int min_blks;
@@ -3064,7 +3067,12 @@ do_retry:
 	lseek(img_fd, 0, SEEK_SET);
 	chunk_size = read(img_fd, buf, fw_size);
 
-	ioctl(dev_fd, MMC_IOC_CMD, &multi_cmd->cmds[0]);
+	ret = ioctl(dev_fd, MMC_IOC_CMD, &multi_cmd->cmds[0]);
+	if (ret) {
+		perror("enter FFU mode faled\n");
+		goto out;
+	}
+#ifdef CHECK_FFU_MODE
 	/* check if in ffu mode */
         ret = read_extcsd(dev_fd, ext_csd);
         if (ret) {
@@ -3079,9 +3087,9 @@ do_retry:
 
 	if (ext_csd[EXT_CSD_MODE_CONFIG] != 0x01) {
 		fprintf(stderr, "Is not in FFU mode\n");
-		goto do_retry;
+		goto out;
 	}
-
+#endif
 	int write_offset = 0;
 	int write_blk_cnt = 0;
 	if (chunk_size)
@@ -3327,6 +3335,7 @@ do_retry:
                 perror("Enter FFU mode failed\n");
                 goto out;
         }
+#ifdef CHECK_FFU_MODE
 	/* check if in ffu mode */
         ret = read_extcsd(dev_fd, ext_csd);
         if (ret) {
@@ -3341,8 +3350,9 @@ do_retry:
 
 	if (ext_csd[EXT_CSD_MODE_CONFIG] != 0x01) {
 		fprintf(stderr, "Is not in FFU mode\n");
-		goto do_retry;
+		goto out;
 	}
+#endif
 
         /* read firmware chunk */
         lseek(img_fd, 0, SEEK_SET);
@@ -3578,7 +3588,7 @@ do_retry:
 			perror("Enter FFU mode failed\n");
 			goto out;
 		}
-
+#ifdef CHECK_FFU_MODE
 		/* check if in ffu mode */
                 ret = read_extcsd(dev_fd, ext_csd);
                 if (ret) {
@@ -3594,10 +3604,10 @@ do_retry:
 
 		if (ext_csd[EXT_CSD_MODE_CONFIG] != 0x01) {
 			fprintf(stderr, "Is not in FFU mode\n");
-			goto do_retry;
+			goto out;
 		}
 
-
+#endif
                 /* send ioctl with multi-cmd */
                 ret = ioctl(dev_fd, MMC_IOC_CMD, &multi_cmd->cmds[1]);
 
