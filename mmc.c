@@ -227,12 +227,17 @@ static struct Command commands[] = {
 		  "The device path should specify the scr file directory.",
 	  NULL
 	},
-	{ do_ffu, -2,
-	  "ffu", "<image name> <device> [chunk-bytes]\n"
+	{ do_ffu1, -2,
+	  "ffu1", "<image name> <device> [chunk-bytes]\n"
 		"Run Field Firmware Update with <image name> on <device>.\n"
 		"[chunk-bytes] is optional and defaults to its max - 512k. "
 		"should be in decimal bytes and sector aligned.\n",
 	  NULL
+	},
+	{ do_ffu2, -2,
+	 "ffu2", "<image name> <device> [chunk-bytes]\n"
+	 "Same as 'ffu1', but uses CMD23+CMD25 for repeated downloads and remains in FFU mode until completion.\n",
+	 NULL
 	},
 	{ do_erase, -4,
 	"erase", "<type> " "<start address> " "<end address> " "<device>\n"

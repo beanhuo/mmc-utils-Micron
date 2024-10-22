@@ -185,12 +185,15 @@ The device path should specify the cid sysfs file directory.
 Print SCR data from \fIdevice\-path\fR.
 The device path should specify the scr sysfs file directory.
 .TP
-.BI ffu " " \fIimage\-file\-name\fR " " \fIdevice\fR " " [\fIchunk\-bytes\fR]
+.BI ffu1 " " \fIimage\-file\-name\fR " " \fIdevice\fR " " [\fIchunk\-bytes\fR]
 Run Field Firmware Update with \fIimage\-file\-name\fR on the device.
 .br
 [\fIchunk\-bytes\fR] is optional and defaults to its max - 512k. should be in decimal bytes and sector aligned.
 .br
 if [\fIchunk\-bytes\fR] is omitted, mmc-utils will try to run ffu using the largest possible chunks: max(image-file, 512k).
+.TP
+.BI ffu2 " \fIimage\-file\-name\fR " " \fIdevice\fR " " [\fIchunk\-bytes\fR]
+Same as 'ffu1', but uses CMD23+CMD25 for repeated downloads and remains in FFU mode until completion.
 .TP
 .BI erase " " \fItype\fR " " \fIstart-address\fR " " \fIend\-address\fR " " \fIdevice\fR
 Send Erase CMD38 with specific argument to the device.
