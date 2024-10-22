@@ -239,6 +239,11 @@ static struct Command commands[] = {
 	 "Same as 'ffu1', but uses CMD23+CMD25 for repeated downloads and remains in FFU mode until completion.\n",
 	 NULL
 	},
+	{ do_ffu3, -2,
+	 "ffu3", "<image name> <device> [chunk-bytes]\n"
+	 "Same as 'ffu', but uses CMD25+CMD12 Open-ended Multiple-block write to download and remains in FFU mode until completion.\n",
+	 NULL
+	},
 	{ do_erase, -4,
 	"erase", "<type> " "<start address> " "<end address> " "<device>\n"
 		"Send Erase CMD38 with specific argument to the <device>\n\n"
