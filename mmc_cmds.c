@@ -2852,6 +2852,11 @@ static void set_ffu_download_cmd(struct mmc_ioc_multi_cmd *multi_cmd,
 		mmc_ioc_cmd_set_data(multi_cmd->cmds[0], buf + offset);
 		set_single_cmd(&multi_cmd->cmds[1], MMC_STOP_TRANSMISSION, 0, 0, 0);
 		multi_cmd->cmds[1].flags = MMC_RSP_SPI_R1B | MMC_RSP_R1B | MMC_CMD_AC;
+	} else if (ffu_mode == 4) {
+		fill_switch_cmd(&multi_cmd->cmds[0], EXT_CSD_MODE_CONFIG, EXT_CSD_FFU_MODE);
+		set_single_cmd(&multi_cmd->cmds[1], MMC_WRITE_BLOCK, 1, 1, arg);
+		mmc_ioc_cmd_set_data(multi_cmd->cmds[1], buf + offset);
+		fill_switch_cmd(&multi_cmd->cmds[2], EXT_CSD_MODE_CONFIG, EXT_CSD_NORMAL_MODE);
 	}
 }
 
@@ -2952,8 +2957,13 @@ static int do_ffu_download(int dev_fd, __u8 *ext_csd, __u8 *fw_buf, off_t fw_siz
 		return -EINVAL;
 	}
 
-	if (ffu_mode != 1) /* in FFU mode 1, mmc_ioc_multi_cmd contains 4 commands */
+	if (ffu_mode == 2 || ffu_mode == 3) {
+		/* in FFU mode 2, 3, mmc_ioc_multi_cmd contains 2 commands */
 		num_of_cmds = 2;
+	} else if (ffu_mode == 4) {
+		num_of_cmds = 3; /* in FFU mode 4, mmc_ioc_multi_cmd contains 3 commands */
+		chunk_size = 512; /* FFU mode 4 uses CMD24 single-block write */
+	}
 
 	/* allocate maximum required */
 	multi_cmd = calloc(1, sizeof(struct mmc_ioc_multi_cmd) +
@@ -2963,9 +2973,9 @@ static int do_ffu_download(int dev_fd, __u8 *ext_csd, __u8 *fw_buf, off_t fw_siz
 		return -ENOMEM;
 	}
 
-	if (ffu_mode != 1) {
+	if (ffu_mode == 2 || ffu_mode == 3) {
 		/*
-		 * If the device is not in FFU mode 1, the command to enter FFU mode will be sent
+		 * In FFU mode 2, mode 3, the command to enter FFU mode will be sent
 		 * independently, separate from the firmware bundle download command.
 		 */
 		ret = enter_ffu_mode(dev_fd);
@@ -3020,9 +3030,9 @@ do_retry:
 		off += bytes_per_loop;
 	}
 
-	if (ffu_mode != 1) {
+	if (ffu_mode == 2 || ffu_mode == 3) {
 		/*
-		 * If the device is not in FFU mode 1, the command to exit FFU mode will be sent
+		 * In FFU mode 2, FFU mode 3, the command to exit FFU mode will be sent
 		 * independently, separate from the firmware bundle download command.
 		 */
 		ret = exit_ffu_mode(dev_fd);
@@ -3206,6 +3216,11 @@ int do_ffu2(int nargs, char **argv)
 int do_ffu3(int nargs, char **argv)
 {
 	return __do_ffu(nargs, argv, 3);
+}
+
+int do_ffu4(int nargs, char **argv)
+{
+	return __do_ffu(nargs, argv, 4);
 }
 
 int do_general_cmd_read(int nargs, char **argv)

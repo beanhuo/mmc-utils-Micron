@@ -241,7 +241,12 @@ static struct Command commands[] = {
 	},
 	{ do_ffu3, -2,
 	 "ffu3", "<image name> <device> [chunk-bytes]\n"
-	 "Same as 'ffu', but uses CMD25+CMD12 Open-ended Multiple-block write to download and remains in FFU mode until completion.\n",
+	 "Same as 'ffu1', but uses CMD25+CMD12 Open-ended Multiple-block write to download and remains in FFU mode until completion.\n",
+	 NULL
+	},
+	{ do_ffu4, -2,
+	 "ffu4", "<image name> <device> [chunk-bytes]\n"
+	 "Same as 'ffu1', but uses CMD24 Single-block write to download, exiting FFU mode after each block written.\n",
 	 NULL
 	},
 	{ do_erase, -4,
